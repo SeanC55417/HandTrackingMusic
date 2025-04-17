@@ -8,17 +8,16 @@ mp_draw = mp.solutions.drawing_utils
 
 cap = cv2.VideoCapture(0)
 
+
 while True:
     success, frame = cap.read()
+    frame = cv2.flip(frame, 1)
+
     if not success:
         break
 
     img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = hands.process(img_rgb)
-
-    # Variables to store the coordinates of id 8 for both hands
-    left_hand_8 = None
-    right_hand_8 = None
 
     left_hand_landmarks = {}
     right_hand_landmarks = {}
@@ -42,21 +41,24 @@ while True:
             # Draw landmarks on the frame
             mp_draw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-        # Example: Store id 8 coordinates for both hands
-        left_hand_8 = left_hand_landmarks.get(8)
-        right_hand_8 = right_hand_landmarks.get(8)
-
+    left_hand_midpoint = None
+    right_hand_midpoint = None
     if left_hand_landmarks.get(4) and left_hand_landmarks.get(8):
         cv2.line(frame, left_hand_landmarks[4], left_hand_landmarks[8], (255, 0, 0), 2)
         distance = math.sqrt((left_hand_landmarks[4][0] - left_hand_landmarks[8][0]) ** 2 + (left_hand_landmarks[4][1] - left_hand_landmarks[8][1]) ** 2)
-        mid_point = ((left_hand_landmarks[4][0] + left_hand_landmarks[8][0]) // 2, (left_hand_landmarks[4][1] + left_hand_landmarks[8][1]) // 2)
-        cv2.putText(frame, f'{distance:.2f}', mid_point, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+        left_hand_midpoint = ((left_hand_landmarks[4][0] + left_hand_landmarks[8][0]) // 2, (left_hand_landmarks[4][1] + left_hand_landmarks[8][1]) // 2)
+        cv2.putText(frame, f'{distance:.2f}', left_hand_midpoint, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
     if right_hand_landmarks.get(4) and right_hand_landmarks.get(8):
         cv2.line(frame, right_hand_landmarks[4], right_hand_landmarks[8], (255, 0, 0), 2)
         distance = math.sqrt((right_hand_landmarks[4][0] - right_hand_landmarks[8][0]) ** 2 + (right_hand_landmarks[4][1] - right_hand_landmarks[8][1]) ** 2)
-        mid_point = ((right_hand_landmarks[4][0] + right_hand_landmarks[8][0]) // 2, (right_hand_landmarks[4][1] + right_hand_landmarks[8][1]) // 2)
-        cv2.putText(frame, f'{distance:.2f}', mid_point, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+        right_hand_midpoint = ((right_hand_landmarks[4][0] + right_hand_landmarks[8][0]) // 2, (right_hand_landmarks[4][1] + right_hand_landmarks[8][1]) // 2)
+        cv2.putText(frame, f'{distance:.2f}', right_hand_midpoint, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+
+    if left_hand_midpoint and right_hand_midpoint:
+        cv2.line(frame, left_hand_midpoint, right_hand_midpoint, (0, 255, 0), 2)
+        cv2.putText(frame, f'{distance:.2f}', ((left_hand_midpoint[0] + right_hand_midpoint[0]) // 2, (left_hand_midpoint[1] + right_hand_midpoint[1]) // 2), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
 
     cv2.imshow("Hand Tracking", frame)
 
